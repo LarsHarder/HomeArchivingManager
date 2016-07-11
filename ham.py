@@ -140,6 +140,41 @@ def add(filesToAdd):
     sys.exit(0)
     return
 
+def addDirectory(paths):
+    if not os.path.isfile (home + '/' + LISTFILE):
+        print 'listfile not present - PREPARE'
+        sys.exit(23)
+    filesWithFullPath = []
+    for newPath in paths:
+        print "newPath: " + os.getcwd() + '/' + newPath
+        if not os.path.isdir(os.getcwd() + '/' + newPath):
+            print newPath + ' is not a directory'
+            sys.exit(25)
+    try:
+        listFile = open(home + '/' + LISTFILE, 'a')
+    except IOError:
+        print 'could not open listfile for appending'
+        sys.exit(24)
+
+    for path in paths:
+        for (dirpath, dirnames, filenames) in os.walk(path):
+            for aFile in filenames:
+                    #print 'adding      : cwd:' + os.getcwd() + ' dirpath:' + dirpath + ' file: ' + aFile
+                    if dirpath [-1:] == '/':
+                        filesWithFullPath.append(os.getcwd() + '/' + dirpath +  aFile)
+                    else:
+                        filesWithFullPath.append(os.getcwd() + '/' + dirpath + '/' + aFile)
+
+    for newFile in filesWithFullPath:
+        print 'add file ' + newFile
+        listFile.write(newFile + '\n')
+    listFile.close()
+    print 'added files'
+    size, listOfFiles, maxSizeOfArchive = sizeOfFiles()
+    print 'archive uses ' + str(size) + ' of ' + str(maxSizeOfArchive)
+    sys.exit(0)
+    return
+
 def getLatestArchive():
     directories = []
     for (dirpath, dirnames, filenames) in os.walk(pathToArchive):
@@ -207,8 +242,6 @@ def symlinkFile(source, targetDirectory):
     os.symlink(targetDirectory + source, source)
     return
 
-
-
 def create():
     size, listOfFilesToArchive, maxSizeOfArchive = sizeOfFiles()
 
@@ -275,6 +308,12 @@ def parseCommandline():
         filesToAdd = commandline[1:]
         add(filesToAdd)
         return
+    if commandline[0].lower()=='adddir':
+        if commandline.__len__() == 1:
+            printHelp()
+            sys.exit(1)
+        pathsToAdd = commandline[1:]
+        addDirectory(pathsToAdd)
     if commandline[0].lower()=='create':
         if commandline.__len__() > 1:
             printHelp()
