@@ -10,7 +10,8 @@
 # at the original location. (Think of a differential Backup...)
 #
 # Lars Harder
-# started: 20160710
+# started:      20160710
+# last edited:  20160711
 
 
 import os
@@ -129,17 +130,41 @@ def getLatestArchive():
     directoryNumbers.sort()
     return int(directoryNumbers[-1])
 
+def createFolder(targetPath):
+    # if path exists, return
+    if os.path.isdir(targetPath):
+        return
+
+    # find parent directory
+    indexOfLastSlash = targetPath.rfind('/')
+    leftPath = targetPath[0:indexOfLastSlash]
+    rightPath = targetPath[indexOfLastSlash + 1:]
+
+    # create it
+    createFolder(leftPath)
+
+    # finally create last directory in targetPath
+    try:
+        os.mkdir(targetPath + '/')
+    except OSError:
+        print 'could not create new directory: ' + targetPath
+        sys.exit(21)
+
 def moveFile(source, targetDirectory):
     print source + ' -> ' + targetDirectory
-    filename = source.split('/')[-1]
-    os.rename(source, targetDirectory + filename)
+    # find path of source
+    indexOfLastSlash = source.rfind('/')
+    sourcePath = source[0:indexOfLastSlash]
+
+    createFolder(targetDirectory + sourcePath)
+    os.rename(source, targetDirectory +  source)
     return
 
 def symlinkFile(source, targetDirectory):
     print source + ' -> ' + targetDirectory
-    filename = source.split('/')[-1]
-    print 'symlink ' + targetDirectory + filename + ' <- ' + source
-    os.symlink(targetDirectory + filename, source)
+    #filename = source.split('/')[-1]
+    print 'symlink ' + targetDirectory + source + ' <- ' + source
+    os.symlink(targetDirectory + source, source)
     return
 
 def create():
@@ -191,10 +216,10 @@ def create():
     # move first, bacause moving a file then symlinking leads to
     # OSError: [Errno 16] Device or resource busy
     for fileToArchive in listOfFilesToArchive:
-        moveFile(fileToArchive, pathToArchive + str(currentArchive) + '/')
+        moveFile(fileToArchive, pathToArchive + str(currentArchive))
 
     for fileToArchive in listOfFilesToArchive:
-        symlinkFile(fileToArchive, pathToArchive + str(currentArchive) + '/')
+        symlinkFile(fileToArchive, pathToArchive + str(currentArchive))
     return
 
 def discard():
