@@ -2,7 +2,7 @@
 
 # ham.py
 #
-HomeArchivingManager
+# HomeArchivingManager
 #
 # Move files to an archiving-location and create symlinks from original location.
 # Allows to archive Files to CD/DVD/BluRay, keep the files available from
@@ -115,6 +115,10 @@ def getLatestArchive():
         directories.extend(dirnames)
         break
     directoryNumbers = []
+
+    # if Archive empty return 0 archives
+    if len(dirnames) == 0:
+        return 0
     try:
         for directoryName in directories:
             nr = int(directoryName)
