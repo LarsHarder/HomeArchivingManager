@@ -47,7 +47,6 @@ def readConfigFile():
     if home == None:
         print 'Environment Variable "HOME" not set'
         sys.exit(3)
-    print home
     try:
         configFile = open(home + '/' + CONFIGFILE,'r')
     except IOError:
@@ -72,8 +71,36 @@ def readConfigFile():
         sys.exit(8)
     return home, pathToArchive
 
+def sizeOfFiles():
+    try:
+        listFile = open(home + '/' + LISTFILE, 'r')
+    except IOError:
+        print 'error opening listfile for creating'
+        sys.exit(16)
+    try:
+        maxSizeOfArchive = int(listFile.readline())
+    except:
+        print 'error reading listfile 1'
+        sys.exit(17)
+    listOfFilesToArchive = []
+    for fileToArchive in listFile:
+        listOfFilesToArchive.append(fileToArchive[:-1]) # read and remove newline
+    setOfFilesToArchive = set(listOfFilesToArchive)
+
+    # check for duplicates
+    if len(setOfFilesToArchive) < len(listOfFilesToArchive):
+        print 'Discarding ' + str(len(listOfFilesToArchive)-len(setOfFilesToArchive)) + ' duplicate entries'
+        listOfFilesToArchive = list(setOfFilesToArchive)
+
+    # calculate size of files
+    size = 0
+    for fileToArchive in listOfFilesToArchive:
+        fileSize = os.path.getsize(fileToArchive)
+        fileSizeOnDisk = round((fileSize / SECTORSIZE) + 0.5) * SECTORSIZE
+        size = size + fileSizeOnDisk
+    return size, listOfFilesToArchive, maxSizeOfArchive
+
 def prepare(sizeOfArchive):
-    print home + '/' + LISTFILE
     if os.path.isfile (home + '/' + LISTFILE):
         print 'listfile present - DISCARD, ADD or CREATE'
         sys.exit(9)
@@ -108,6 +135,8 @@ def add(filesToAdd):
         listFile.write(newFile + '\n')
     listFile.close()
     print 'added ' + str(filesToAdd.__len__()) + ' files'
+    size, listOfFiles, maxSizeOfArchive = sizeOfFiles()
+    print 'archive uses ' + str(size) + ' of ' + str(maxSizeOfArchive)
     sys.exit(0)
     return
 
@@ -175,41 +204,15 @@ def moveFile(source, targetDirectory):
     return
 
 def symlinkFile(source, targetDirectory):
-    #filename = source.split('/')[-1]
-    print 'symlink ' + targetDirectory + source + ' <- ' + source
     os.symlink(targetDirectory + source, source)
     return
 
+
+
 def create():
-    try:
-        listFile = open(home + '/' + LISTFILE, 'r')
-    except IOError:
-        print 'error opening listfile for creating'
-        sys.exit(16)
-    try:
-        maxSizeOfArchive = int(listFile.readline())
-    except:
-        print 'error reading listfile 1'
-        sys.exit(17)
-    print 'Max size of Archive: ' + str(maxSizeOfArchive)
-    listOfFilesToArchive = []
-    for fileToArchive in listFile:
-        listOfFilesToArchive.append(fileToArchive[:-1]) # read and remove newline
-    setOfFilesToArchive = set(listOfFilesToArchive)
+    size, listOfFilesToArchive, maxSizeOfArchive = sizeOfFiles()
 
-    # check for duplicates
-    if len(setOfFilesToArchive) < len(listOfFilesToArchive):
-        print 'Discarding ' + str(len(listOfFilesToArchive)-len(setOfFilesToArchive)) + ' duplicate entries'
-        listOfFilesToArchive = list(setOfFilesToArchive)
-
-    # calculate size of files
-    sizeOfFiles = 0
-    for fileToArchive in listOfFilesToArchive:
-        fileSize = os.path.getsize(fileToArchive)
-        fileSizeOnDisk = round((fileSize / SECTORSIZE) + 0.5) * SECTORSIZE
-        sizeOfFiles = sizeOfFiles + fileSizeOnDisk
-    print 'total size of files: ' + str(sizeOfFiles)
-    if sizeOfFiles > maxSizeOfArchive:
+    if size > maxSizeOfArchive:
         print 'size of files is larger than size of Archive - delete manually or DISCARD'
         sys.exit(18)
 
@@ -217,10 +220,8 @@ def create():
     currentArchive = latestArchive + 1
 
     # create new Archive-Directory
-    print 'creating new directory ' + pathToArchive + str(currentArchive) + '/'
     try:
         os.mkdir(pathToArchive + str(currentArchive) + '/')
-        #print 'todo'
     except OSError:
         print 'could not create new directory for archive'
         sys.exit(20)
