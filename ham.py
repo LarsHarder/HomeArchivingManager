@@ -140,9 +140,6 @@ def deleteListfile():
 
 def moveListfileToArchive(archiveNumber):
     try:
-        print 'move listfile'
-        print 'from:' + home + '/' + LISTFILE
-        print 'to:  ' + pathToArchive  + str(archiveNumber) + '/' + LISTFILE
         shutil.move(home + '/' + LISTFILE, pathToArchive  + str(archiveNumber) + '/' + LISTFILE)
     except IOError:
         print 'listfile could not be moved to archive'
@@ -169,7 +166,6 @@ def createFolder(targetPath):
         sys.exit(21)
 
 def moveFile(source, targetDirectory):
-    print source + ' -> ' + targetDirectory
     # find path of source
     indexOfLastSlash = source.rfind('/')
     sourcePath = source[0:indexOfLastSlash]
@@ -179,7 +175,6 @@ def moveFile(source, targetDirectory):
     return
 
 def symlinkFile(source, targetDirectory):
-    print source + ' -> ' + targetDirectory
     #filename = source.split('/')[-1]
     print 'symlink ' + targetDirectory + source + ' <- ' + source
     os.symlink(targetDirectory + source, source)
@@ -254,8 +249,6 @@ def parseCommandline():
     commandline = sys.argv
     if 'ham.py' in commandline[0]:
         commandline = commandline[1:]
-    print commandline
-    print commandline.__len__()
     if commandline.__len__() == 0:
         printHelp()
         sys.exit(1)
