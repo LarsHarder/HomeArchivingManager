@@ -16,6 +16,7 @@
 
 import os
 import sys
+import shutil
 
 SECTORSIZE = 2048           # size of a sector on a CD/DVD/BluRay for
                             # calculating used filesize
@@ -130,6 +131,23 @@ def getLatestArchive():
     directoryNumbers.sort()
     return int(directoryNumbers[-1])
 
+def deleteListfile():
+    try:
+        os.remove (home + '/' + LISTFILE)
+    except IOError:
+        print 'Error deleting listfile'
+        sys.exit(15)
+
+def moveListfileToArchive(archiveNumber):
+    try:
+        print 'move listfile'
+        print 'from:' + home + '/' + LISTFILE
+        print 'to:  ' + pathToArchive  + str(archiveNumber) + '/' + LISTFILE
+        shutil.move(home + '/' + LISTFILE, pathToArchive  + str(archiveNumber) + '/' + LISTFILE)
+    except IOError:
+        print 'listfile could not be moved to archive'
+        sys.exit(22)
+
 def createFolder(targetPath):
     # if path exists, return
     if os.path.isdir(targetPath):
@@ -220,17 +238,15 @@ def create():
 
     for fileToArchive in listOfFilesToArchive:
         symlinkFile(fileToArchive, pathToArchive + str(currentArchive))
+
+    moveListfileToArchive(currentArchive)
     return
 
 def discard():
     if not os.path.isfile (home + '/' + LISTFILE):
         print 'listfile not present - nothing to discard'
         sys.exit(14)
-    try:
-        os.remove (home + '/' + LISTFILE)
-    except IOError:
-        print 'Error deleting listfile when discarding'
-        sys.exit(15)
+    deleteListfile()
     print 'listfile deleted'
     sys.exit(0)
 
