@@ -41,6 +41,12 @@ def testForPosix():
 
 def printHelp():
     print 'Help Message for ham.py'
+    print ' prepare <cd / dvd / bd>      create new archiveset'
+    print ' add <files>                  add files to archiveset'
+    print ' adddir <directories>         add files from directory and subdirectories to archiveset'
+    print ' create                       move files and set symlinks'
+    print ' discard                      delete new archiveset without changing any files'
+    print ' --help                       this message'
 
 def readConfigFile():
     home =  os.environ.get('HOME')
